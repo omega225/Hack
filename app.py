@@ -8,7 +8,7 @@ from flask import Flask, render_template, jsonify, request
 #      AETHER V26: OMEGA OVERRIDE
 # ==========================================
 API_TOKEN = '8965863331:AAGbI8j6omcDJLKXyPZt1sw4Aiz6_FwVgQY'
-WEBAPP_URL = 'PASTE_YOUR_RENDER_URL_HERE' 
+WEBAPP_URL = 'https://hack-ih0j.onrender.com' 
 # ==========================================
 
 bot = telebot.TeleBot(API_TOKEN)
