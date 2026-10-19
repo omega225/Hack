@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; font-family: monospace; }
+        .iframe-view { width: 100%; height: 100%; border: none; }
+        .admin-panel {
+            position: absolute; top: 15px; left: 15px; width: 150px;
+            background: rgba(0, 5, 0, 0.98); border: 2px solid #00ff41; border-radius: 12px;
+            padding: 10px; z-index: 9999; box-shadow: 0 0 20px #00ff41; color: #00ff41;
+        }
+        .input-crack { background: #000; border: 1px solid #00ff41; color: #fff; width: 100%; text-align: center; font-size: 14px; padding: 4px; margin: 5px 0; outline: none; }
+        .btn-extract { background: #00ff41; color: #000; width: 100%; font-weight: 900; font-size: 10px; padding: 10px; text-transform: uppercase; border-radius: 4px; }
+        .res-zone { margin-top: 10px; border-top: 1px solid #00ff41; padding-top: 10px; text-align: center; }
+        .num-txt { font-size: 2.8rem; font-weight: 900; color: #fff; line-height: 1; }
+        .sync-link { font-size: 7px; color: #00ff41; text-decoration: underline; opacity: 0.5; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <iframe id="game" src="https://maanwin.site/home/all/wingo" class="iframe-view"></iframe>
+
+    <div class="admin-panel" id="dragPanel">
+        <div class="flex justify-between items-center text-[7px] font-bold mb-1">
+            <span id="syncDot" class="text-red-500">● UNSYNCED</span>
+            <span>V26_OMEGA</span>
+        </div>
+
+        <input type="number" id="period" class="input-crack" placeholder="PERIOD">
+        <button onclick="crackResult()" class="btn-extract">EXTRACT DATA</button>
+
+        <div id="resultBox" class="hidden res-zone">
+            <div id="resNum" class="num-txt">--</div>
+            <div id="resColor" class="text-[10px] font-bold tracking-widest">--</div>
+            <div id="resSize" class="text-[8px] opacity-60">--</div>
+            <div class="text-[6px] text-black bg-white font-bold px-1 uppercase mt-1">100% Correct</div>
+        </div>
+        
+        <div class="mt-2 text-center">
+            <span onclick="showSync()" class="sync-link">CALIBRATE NEURAL LINK</span>
+        </div>
+    </div>
+
+    <!-- SYNC MODAL (Hidden) -->
+    <div id="syncModal" class="hidden absolute inset-0 bg-black/90 z-[10000] flex items-center justify-center p-6 text-center">
+        <div class="space-y-4">
+            <div class="text-xs">INPUT LAST WINNING NUMBER</div>
+            <input type="number" id="lastP" class="input-crack" placeholder="Last Period">
+            <input type="number" id="lastN" class="input-crack" placeholder="Last Number">
+            <button onclick="performSync()" class="btn-extract">SYNC SYSTEM</button>
+        </div>
+    </div>
+
+    <script>
+        async function crackResult() {
+            const period = document.getElementById('period').value;
+            const resBox = document.getElementById('resultBox');
+            if(!period) return;
+            const res = await fetch(`/crack?period=${period}`);
+            const data = await res.json();
+            resBox.classList.remove('hidden');
+            document.getElementById('resNum').innerText = data.number;
+            document.getElementById('resColor').innerText = data.color;
+            document.getElementById('resColor').style.color = data.color.includes("GREEN") ? "#26a69a" : "#ef5350";
+            document.getElementById('resSize').innerText = data.size;
+        }
+
+        function showSync() { document.getElementById('syncModal').classList.remove('hidden'); }
+
+        async function performSync() {
+            const p = document.getElementById('lastP').value;
+            const n = document.getElementById('lastN').value;
+            await fetch(`/calibrate?period=${p}&num=${n}`);
+            document.getElementById('syncModal').classList.add('hidden');
+            document.getElementById('syncDot').innerText = "● SYNCED";
+            document.getElementById('syncDot').className = "text-green-500";
+        }
+
+        // Draggable Logic
+        const panel = document.getElementById('dragPanel');
+        let active = false, currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0;
+        panel.addEventListener("touchstart", (e) => {
+            initialX = e.touches[0].clientX - xOffset; initialY = e.touches[0].clientY - yOffset;
+            if (e.target === panel || panel.contains(e.target)) active = true;
+        }, false);
+        panel.addEventListener("touchend", () => { initialX = currentX; initialY = currentY; active = false; }, false);
+        panel.addEventListener("touchmove", (e) => {
+            if (active) {
+                e.preventDefault();
+                currentX = e.touches[0].clientX - initialX; currentY = e.touches[0].clientY - initialY;
+                xOffset = currentX; yOffset = currentY;
+                panel.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+            }
+        }, false);
+    </script>
+</body>
+</html>
